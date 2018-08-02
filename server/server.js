@@ -22,16 +22,18 @@ app.use(express.static(publicPath));
 io.on('connection', (socket) => {
     console.log("New user connected");
 
-    // emit a newMessage event TO the client
-    socket.emit("newMessage", {
-        from: "apple@yahoo.com",
-        text: "Hey this is Apple!",
-        createdAt: 123
-    });
-
     // listen to the createMessage event FROM the client
-    socket.on('createMessage', (newMessage) => {
-        console.log("createMessage", newMessage);
+    socket.on('createMessage', (message) => {
+        console.log("createMessage", message);
+
+        // emit that event to EVERY connection (including the same client) using io.emit
+        io.emit('newMessage', {
+            from: message.from,
+            text: message.text,
+            createdAt: new Date().getTime()
+
+        });
+
     });
 
     socket.on('disconnect', () => {
