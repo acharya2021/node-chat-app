@@ -1,5 +1,4 @@
 // a built-in module to make access to different directories easier
-
 const path = require('path');
 const http = require('http');
 const express = require('express');
@@ -22,6 +21,18 @@ app.use(express.static(publicPath));
 // listen for a new connection
 io.on('connection', (socket) => {
     console.log("New user connected");
+
+    // emit a newMessage event TO the client
+    socket.emit("newMessage", {
+        from: "apple@yahoo.com",
+        text: "Hey this is Apple!",
+        createdAt: 123
+    });
+
+    // listen to the createMessage event FROM the client
+    socket.on('createMessage', (newMessage) => {
+        console.log("createMessage", newMessage);
+    });
 
     socket.on('disconnect', () => {
         console.log("Client disconnected");
