@@ -32,11 +32,12 @@ io.on('connection', (socket) => {
     socket.broadcast.emit("newMessage", generateMessage("Admin", "A new user has joined!"));
 
     // listen to the createMessage event FROM the client
-    socket.on('createMessage', (message) => {
+    socket.on('createMessage', (message,callback) => {
         console.log("createMessage", message);
 
         // emit that event to EVERY connection (including the same client) using io.emit
-        io.emit('newMessage', generateMessage(message.from,message.text));
+        io.emit('newMessage', generateMessage(message.from, message.text));
+        callback("This is from the server");
 
         // the user we call here shouldn't get the event.
         // Everyone else should

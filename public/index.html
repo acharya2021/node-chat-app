@@ -9,8 +9,19 @@
 <body>
 <p>Welcome to the chat app</p>
 
+<!--Add items to the list as individual messages-->
+<ol id="messages"></ol>
+
+<!--Create a form to type in and send messages-->
+<form id="message-form">
+    <input name="message" type="text" placeholder="Message"/>
+    <button>Send</button>
+
+</form>
+
 <!--load in the socket library -->
 <script src="/socket.io/socket.io.js"></script>
+<script src="/js/libs/jquery-3.3.1.min.js"></script>
 <script src="/js/index.js"></script>
 </body>
 </html>
