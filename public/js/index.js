@@ -10,30 +10,29 @@ socket.on('disconnect', function () {
 
 // listen to the newMessage event from the server
 socket.on("newMessage", function (message) {
-
     var formattedTime = moment(message.createdAt).format('h:mm a');
-    // create an object using jQuery
-    var li = jQuery("<li></li>");
-    li.text(`${message.from} ${formattedTime}: ${message.text}`);
+    var template = jQuery("#message-template").html();
+    var html = Mustache.render(template, {
+        text: message.text,
+        from: message.from,
+        createdAt: formattedTime
+    });
 
-    // select the object using jQuery
-    jQuery("#messages").append(li);
-
+    jQuery("#messages").append(html);
 });
 
 // add an event listener for the new location message event
 socket.on("newLocationMessage", function (message) {
     var formattedTime = moment(message.createdAt).format("h:mm a");
+    var template = jQuery("#location-message-template").html();
 
-    var li = jQuery("<li></li>");
+    var html = Mustache.render(template, {
+        from: message.from,
+        createdAt: formattedTime,
+        url: message.url
+    });
 
-    // target = '_blank' opens the map in a NEW tab
-    var a = jQuery("<a target='_blank'>My current location</a>");
-
-    li.text(`${message.from} ${formattedTime}: `);
-    a.attr('href', message.url);
-    li.append(a);
-    jQuery("#messages").append(li);
+    jQuery("#messages").append(html);
 });
 
 // add an event listener to the selected form
