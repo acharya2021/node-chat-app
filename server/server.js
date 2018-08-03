@@ -4,7 +4,7 @@ const http = require('http');
 const express = require('express');
 const socketIO = require('socket.io');
 
-const {generateMessage} = require('./utils/message');
+const {generateMessage, generateLocationMessage} = require('./utils/message');
 
 var app = express();
 // using the http server as opposed to the express server
@@ -32,21 +32,17 @@ io.on('connection', (socket) => {
     socket.broadcast.emit("newMessage", generateMessage("Admin", "A new user has joined!"));
 
     // listen to the createMessage event FROM the client
-    socket.on('createMessage', (message,callback) => {
+    socket.on('createMessage', (message, callback) => {
         console.log("createMessage", message);
 
         // emit that event to EVERY connection (including the same client) using io.emit
         io.emit('newMessage', generateMessage(message.from, message.text));
         callback("This is from the server");
+    });
 
-        // the user we call here shouldn't get the event.
-        // Everyone else should
-        // socket.broadcast.emit('newMessage', {
-        //     from: message.from,
-        //     text: message.text,
-        //     createdAt: new Date().getTime()
-        // });
-
+    // listen to the createLocationMessage event
+    socket.on('createLocationMessage', (coords) => {
+        io.emit("newLocationMessage", generateLocationMessage("Admin", coords.latitude, coords.longitude));
     });
 
     socket.on('disconnect', () => {
