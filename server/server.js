@@ -37,7 +37,7 @@ io.on('connection', (socket) => {
 
         // emit that event to EVERY connection (including the same client) using io.emit
         io.emit('newMessage', generateMessage(message.from, message.text));
-        callback("This is from the server");
+        callback();
     });
 
     // listen to the createLocationMessage event
