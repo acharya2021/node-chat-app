@@ -4,6 +4,8 @@ const http = require('http');
 const express = require('express');
 const socketIO = require('socket.io');
 
+const {generateMessage} = require('./utils/message');
+
 var app = express();
 // using the http server as opposed to the express server
 var server = http.createServer(app);
@@ -24,30 +26,17 @@ io.on('connection', (socket) => {
 
     // socket.emit from admin to the user who joined
     // responsible for greeting the individual user
-    socket.emit("newMessage", {
-        from: "Admin",
-        text: "Welcome to the chat room, new User!",
-        createdAt: new Date().getTime()
-    });
+    socket.emit("newMessage", generateMessage("Admin", "Welcome to the chat app, new User!"));
 
     // socket.broadcast.emit from admin to everybody but the user who joined
-    socket.broadcast.emit("newMessage", {
-        from: "Admin",
-        text: "A new user has joined!",
-        createdAt: new Date().getTime()
-    });
+    socket.broadcast.emit("newMessage", generateMessage("Admin", "A new user has joined!"));
 
     // listen to the createMessage event FROM the client
     socket.on('createMessage', (message) => {
         console.log("createMessage", message);
 
         // emit that event to EVERY connection (including the same client) using io.emit
-        io.emit('newMessage', {
-            from: message.from,
-            text: message.text,
-            createdAt: new Date().getTime()
-
-        });
+        io.emit('newMessage', generateMessage(message.from,message.text));
 
         // the user we call here shouldn't get the event.
         // Everyone else should
