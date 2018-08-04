@@ -1,4 +1,26 @@
 var socket = io();
+
+// autoscroll function
+function scrollToBottom() {
+    // Selectors
+    var messages = jQuery("#messages");
+    var newMessage = messages.children("li:last-child");
+
+    // Heights
+    // prop fetches a particular property
+    var clientHeight = messages.prop("clientHeight");
+    var scrollTop = messages.prop("scrollTop");
+    var scrollHeight = messages.prop("scrollHeight");
+    var newMessageHeight = newMessage.innerHeight();
+    // gets the previous message's height
+    var lastMessageHeight = newMessage.prev().innerHeight();
+
+    if (clientHeight + scrollTop + newMessageHeight + lastMessageHeight >= scrollHeight) {
+        // console.log("Should scroll!");
+        messages.scrollTop(scrollHeight);
+    }
+}
+
 // the first argument is the name of the event: connect
 socket.on('connect', function () {
     console.log("Connected to server");
@@ -19,6 +41,7 @@ socket.on("newMessage", function (message) {
     });
 
     jQuery("#messages").append(html);
+    scrollToBottom();
 });
 
 // add an event listener for the new location message event
@@ -33,6 +56,7 @@ socket.on("newLocationMessage", function (message) {
     });
 
     jQuery("#messages").append(html);
+    scrollToBottom();
 });
 
 // add an event listener to the selected form
