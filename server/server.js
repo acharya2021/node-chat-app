@@ -5,13 +5,14 @@ const express = require('express');
 const socketIO = require('socket.io');
 
 const {generateMessage, generateLocationMessage} = require('./utils/message');
-
 var app = express();
 // using the http server as opposed to the express server
 var server = http.createServer(app);
 // create our web socket server
 var io = socketIO(server);
-
+const {isRealString} = require('./utils/validation');
+const {Users} = require('./utils/users');
+var users = new Users();
 const publicPath = path.join(__dirname, '../public');
 // set up port for heroku
 const port = process.env.PORT || 3000;
@@ -24,12 +25,30 @@ app.use(express.static(publicPath));
 io.on('connection', (socket) => {
     console.log("New user connected");
 
-    // socket.emit from admin to the user who joined
-    // responsible for greeting the individual user
-    socket.emit("newMessage", generateMessage("Admin", "Welcome to the chat app, new User!"));
+    // listen to the join event
+    socket.on("join", (params, callback) => {
+        if (!isRealString(params.name) || !isRealString(params.room)) {
+            return callback("Name and room name are required");
+        }
+        // limit chat messages to just the people who are in the room
+        // the user joins the room
+        socket.join(params.room);
+        // remove the user from potential previous rooms
+        users.removeUser(socket.id);
+        // add the user to the new room
+        users.addUser(socket.id, params.name, params.room);
 
-    // socket.broadcast.emit from admin to everybody but the user who joined
-    socket.broadcast.emit("newMessage", generateMessage("Admin", "A new user has joined!"));
+        // emit the updateUserList event to the specific room
+        io.to(params.room).emit('updateUserList', users.getUserList(params.room));
+
+        // socket.emit from admin to the user who joined
+        // responsible for greeting the specific individual user
+        socket.emit("newMessage", generateMessage("Admin", `Welcome to the chat app, ${params.name}!`));
+
+        // socket.broadcast.emit from admin to everybody but the user who joined
+        socket.broadcast.to(params.room).emit("newMessage", generateMessage("Admin", `${params.name} has joined!`));
+        callback();
+    });
 
     // listen to the createMessage event FROM the client
     socket.on('createMessage', (message, callback) => {
@@ -46,7 +65,13 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        console.log("Client disconnected");
+        // console.log("Client disconnected");
+        var user = users.removeUser(socket.id);
+
+        if (user) {
+            io.to(user.room).emit('updateUserList',users.getUserList(user.room));
+            io.to(user.room).emit('newMessage',generateMessage("Admin",`${user.name} has left.`));
+        }
     });
 });
 
