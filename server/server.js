@@ -52,16 +52,22 @@ io.on('connection', (socket) => {
 
     // listen to the createMessage event FROM the client
     socket.on('createMessage', (message, callback) => {
-        console.log("createMessage", message);
+        var user = users.getUser(socket.id);
 
-        // emit that event to EVERY connection (including the same client) using io.emit
-        io.emit('newMessage', generateMessage(message.from, message.text));
+        if (user && isRealString(message.text)) {
+            // emit that event to EVERY connection (including the same client) using io.emit
+            io.to(user.room).emit('newMessage', generateMessage(user.name, message.text));
+        }
+
         callback();
     });
 
     // listen to the createLocationMessage event
     socket.on('createLocationMessage', (coords) => {
-        io.emit("newLocationMessage", generateLocationMessage("Admin", coords.latitude, coords.longitude));
+        var user = users.getUser(socket.id);
+        if (user) {
+            io.to(user.room).emit("newLocationMessage", generateLocationMessage(user.name, coords.latitude, coords.longitude));
+        }
     });
 
     socket.on('disconnect', () => {
@@ -69,8 +75,8 @@ io.on('connection', (socket) => {
         var user = users.removeUser(socket.id);
 
         if (user) {
-            io.to(user.room).emit('updateUserList',users.getUserList(user.room));
-            io.to(user.room).emit('newMessage',generateMessage("Admin",`${user.name} has left.`));
+            io.to(user.room).emit('updateUserList', users.getUserList(user.room));
+            io.to(user.room).emit('newMessage', generateMessage("Admin", `${user.name} has left.`));
         }
     });
 });
